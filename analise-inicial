@@ -1,5 +1,42 @@
 1. deployment-api.yaml
 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastscheduler-api
+  labels:
+    app: fastscheduler
+    component: api
+spec:
+  replicas: 1  # PONTO DE FALHA: apenas 1 réplica
+  selector:
+    matchLabels:
+      app: fastscheduler
+      component: api
+  template:
+    metadata:
+      labels:
+        app: fastscheduler
+        component: api
+    spec:
+      containers:
+      - name: api
+        image: fastscheduler-api:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DB_HOST
+          value: "postgres"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "scheduler"
+        - name: DB_USER
+          value: "admin"
+        - name: DB_PASSWORD
+          value: "password123"
+
 
 Pontos de Falha:
 
@@ -26,6 +63,24 @@ Ação Recomendada: Definir requests (ex: 200m CPU, 256Mi RAM) e limits (ex: 500
 
 2. service-api.yaml
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  labels:
+    app: fastscheduler
+    component: api
+spec:
+  type: ClusterIP
+  selector:
+    app: fastscheduler
+    component: api
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+
+
 Pontos de Falha:
 
 Falta de Readiness no Pod Vinculado
@@ -36,7 +91,31 @@ Ação Recomendada: Garantir readinessProbe configurada no Deployment da API.
 
 3. deployment-frontend.yaml
 
-Função: Define o frontend web da aplicação (interface do usuário).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastscheduler-frontend
+  labels:
+    app: fastscheduler
+    component: frontend
+spec:
+  replicas: 1  
+  selector:
+    matchLabels:
+      app: fastscheduler
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: fastscheduler
+        component: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: fastscheduler-frontend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
 
 Pontos de Falha:
 
@@ -57,6 +136,24 @@ Ação Recomendada: Definir requests e limits mínimos de CPU e memória.
 
 4. service-frontend.yaml
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  labels:
+    app: fastscheduler
+    component: api
+spec:
+  type: ClusterIP
+  selector:
+    app: fastscheduler
+    component: api
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+
+
 
 Pontos de Falha:
 
@@ -70,10 +167,60 @@ Ação Recomendada: Adicionar readinessProbe no deployment.
 
 5. statefulset-db.yaml
 
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app: fastscheduler
+    component: database
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastscheduler
+      component: database
+  template:
+    metadata:
+      labels:
+        app: fastscheduler
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "scheduler"
+        - name: POSTGRES_USER
+          value: "admin"
+        - name: POSTGRES_PASSWORD
+          value: "password123"  
+        # FALTA: livenessProbe
+        # FALTA: readinessProbe
+        # FALTA: resources (requests/limits)
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres  
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+   
+
+
 
 Pontos de Falha:
 
-Instância Única (SPOF)
+Instância Única 
 Configuração: replicas: 1
 Risco: Ponto único de falha — se o nó cair, o banco ficará inacessível.
 Ação Recomendada: Implementar replicação 
@@ -96,6 +243,25 @@ Risco: Perda permanente de dados em falhas.
 Ação Recomendada: Implementar rotina de backup
 
 6. service-db.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: fastscheduler
+    component: database
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service para StatefulSet
+  selector:
+    app: fastscheduler
+    component: database
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+
 
 
 Pontos de Falha:
