@@ -1,0 +1,109 @@
+1. deployment-api.yaml
+
+
+Pontos de Falha:
+
+Réplicas Únicas
+Configuração: replicas: 1
+Risco: Se o pod for finalizado , o serviço da API ficará fora do ar.
+Ação Recomendada: Aumentar para 2–3 réplicas e criar um PodDisruptionBudget.
+
+Ausência de Probes
+Problema: Não há livenessProbe nem readinessProbe.
+Risco: O Kubernetes não detecta pods travados ou não prontos.
+Ação Recomendada: Adicionar probes HTTP no endpoint /healthz.
+
+Credenciais Sensíveis
+Problema: DB_PASSWORD está definida em texto claro no manifesto.
+Risco: Exposição de senha em logs ou versionamento.
+Ação Recomendada: Utilizar Secret Kubernetes e referenciar via envFrom.secretRef.
+
+Falta de Limites de Recursos
+Problema: Sem resources.requests e resources.limits.
+Risco: Pod pode consumir recursos de forma descontrolada, afetando outros serviços.
+Ação Recomendada: Definir requests (ex: 200m CPU, 256Mi RAM) e limits (ex: 500m CPU, 512Mi RAM).
+
+
+2. service-api.yaml
+
+Pontos de Falha:
+
+Falta de Readiness no Pod Vinculado
+Problema: O Service pode enviar tráfego para pods não prontos.
+Risco: Falhas temporárias e respostas inconsistentes.
+Ação Recomendada: Garantir readinessProbe configurada no Deployment da API.
+
+
+3. deployment-frontend.yaml
+
+Função: Define o frontend web da aplicação (interface do usuário).
+
+Pontos de Falha:
+
+Réplicas Únicas
+Configuração: replicas: 1
+Risco: Queda do serviço caso o nó falhe.
+Ação Recomendada: Aumentar para 2 ou mais réplicas.
+
+Ausência de Probes
+Problema: Falta de livenessProbe e readinessProbe.
+Risco: Pod travado pode continuar sendo servido aos usuários.
+Ação Recomendada: Adicionar probes HTTP no endpoint /.
+
+Sem Limites de Recursos
+Risco: Consumo descontrolado sob carga.
+Ação Recomendada: Definir requests e limits mínimos de CPU e memória.
+
+
+4. service-frontend.yaml
+
+
+Pontos de Falha:
+
+Ausência de Ingress Controller
+Risco: Dificuldade para rotear e gerenciar tráfego com HTTPS.
+Ação Recomendada: Implementar Ingress Controller e TLS para ambiente produtivo.
+
+Falta de Readiness no Deployment Vinculado
+Risco: Serviço pode expor pods não prontos, resultando em erros de carregamento.
+Ação Recomendada: Adicionar readinessProbe no deployment.
+
+5. statefulset-db.yaml
+
+
+Pontos de Falha:
+
+Instância Única (SPOF)
+Configuração: replicas: 1
+Risco: Ponto único de falha — se o nó cair, o banco ficará inacessível.
+Ação Recomendada: Implementar replicação 
+
+Credenciais Sensíveis
+Problema: POSTGRES_PASSWORD em texto claro.
+Risco: Vazamento de credenciais.
+Ação Recomendada: Utilizar Secret Kubernetes.
+
+Sem Probes de Saúde
+Risco: Kubernetes não detecta se o banco está aceitando conexões.
+Ação Recomendada: Adicionar 
+
+Sem storageClassName Definido
+Risco: PVC pode ser criado com storage volátil.
+Ação Recomendada: Definir StorageClass com política Retain.
+
+Sem Backup Automatizado
+Risco: Perda permanente de dados em falhas.
+Ação Recomendada: Implementar rotina de backup
+
+6. service-db.yaml
+
+
+Pontos de Falha:
+
+Sem Readiness no Pod Vinculado
+Risco: DNS pode incluir pods não prontos.
+Ação Recomendada: Adicionar readinessProbe TCP.
+
+Sem Estratégia de Backup
+Risco: Perda de dados em falhas não planejadas.
+Ação Recomendada: Adicionar rotina de backup.
