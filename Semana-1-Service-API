@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: fastscheduler
+  labels:
+    app: fastscheduler
+    component: api
+    app.kubernetes.io/name: fastscheduler
+    app.kubernetes.io/component: api
+  annotations:
+    health-check-endpoint: "/healthz/ready"  
+spec:
+  type: ClusterIP
+  selector:
+    app: fastscheduler
+    component: api
+  ports:
+    - name: http             
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+
