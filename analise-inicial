@@ -83,10 +83,30 @@ spec:
 
 Pontos de Falha:
 
-Falta de Readiness no Pod Vinculado
-Problema: O Service pode enviar tráfego para pods não prontos.
-Risco: Falhas temporárias e respostas inconsistentes.
-Ação Recomendada: Garantir readinessProbe configurada no Deployment da API.
+Ausência de Namespace Definido
+Risco: O Service pode ser aplicado no namespace errado, gerando conflitos e dificultando a organização do ambiente.
+Ação Recomendada: Definir namespace: fastscheduler no recurso.
+
+Porta Sem Nome
+Risco: Ferramentas como Ingress, ServiceMonitor e HPA podem falhar ao referenciar a porta do serviço.
+Ação Recomendada: Nomear a porta como name: http.
+
+Labels Não Padronizadas
+Risco: Dificulta integrações, monitoramento e boas práticas de organização.
+Ação Recomendada: Utilizar labels padronizadas como app.kubernetes.io/name e app.kubernetes.io/component.
+
+Selector Não Alinhado ao Deployment
+Risco: O Service pode não encontrar nenhum pod para encaminhar tráfego.
+Ação Recomendada: Garantir que os labels do Deployment correspondam exatamente ao selector do Service.
+
+Endpoint de Saúde Não Documentado
+Risco: O Service pode enviar tráfego para pods não prontos, causando instabilidade.
+Ação Recomendada: Documentar o endpoint de readiness e garantir que o Deployment exponha /healthz/ready.
+
+Falta de NetworkPolicy
+Risco: Qualquer pod no cluster pode acessar a API, aumentando a superfície de ataque.
+Ação Recomendada: Criar uma NetworkPolicy permitindo acesso apenas de componentes autorizados.
+
 
 
 3. deployment-frontend.yaml
