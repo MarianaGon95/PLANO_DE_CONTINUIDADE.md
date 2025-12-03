@@ -174,16 +174,37 @@ spec:
     protocol: TCP
 
 
+Ausência de Namespace Definido
+Configuração: O Service não possui namespace especificado.
+Risco: O recurso pode ser aplicado no namespace errado, causando conflitos e dificultando a organização do ambiente.
+Ação Recomendada: Adicionar namespace: fastscheduler ao Service.
 
-Pontos de Falha:
+Porta Sem Nome
+Configuração: A porta exposta não possui o campo name.
+Risco: Ferramentas como Ingress, HPA e ServiceMonitor podem falhar ao referenciar a porta por nome.
+Ação Recomendada: Nomear a porta como name: http.
 
-Ausência de Ingress Controller
-Risco: Dificuldade para rotear e gerenciar tráfego com HTTPS.
-Ação Recomendada: Implementar Ingress Controller e TLS para ambiente produtivo.
+Labels Não Padronizadas
+Configuração: Labels não seguem o padrão recomendado do Kubernetes.
+Risco: Dificulta automação, observabilidade e integração com ferramentas de CI/CD.
+Ação Recomendada: Adicionar labels como app.kubernetes.io/name e app.kubernetes.io/component.
 
-Falta de Readiness no Deployment Vinculado
-Risco: Serviço pode expor pods não prontos, resultando em erros de carregamento.
-Ação Recomendada: Adicionar readinessProbe no deployment.
+Selector Não Alinhado ao Deployment
+Configuração: O selector depende dos labels app e component.
+Risco: Se os labels do Deployment mudarem, o Service pode não encontrar pods.
+Ação Recomendada: Garantir que os labels do Deployment correspondam exatamente ao selector do Service.
+
+Endpoint de Saúde Não Documentado
+Configuração: O Service não documenta qual endpoint de readiness o Deployment expõe.
+Risco: O Service pode encaminhar tráfego para pods não prontos caso o Deployment não tenha readinessProbe configurada.
+Ação Recomendada: Documentar o endpoint 
+
+Falta de NetworkPolicy
+Configuração: Nenhuma política de rede vinculada ao Service.
+Risco: Qualquer pod no cluster pode acessar o frontend, aumentando a superfície de ataque.
+Ação Recomendada: Criar uma NetworkPolicy 
+
+
 
 5. statefulset-db.yaml
 
