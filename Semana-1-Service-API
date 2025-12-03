@@ -1,3 +1,26 @@
+Mudanças adicionadas:
+
+Definição de Namespace
+Adicionado namespace: fastscheduler.
+
+Padronização de Labels
+Incluídas labels Kubernetes padrão (app.kubernetes.io/name e app.kubernetes.io/component).
+
+Nomeação da Porta
+Porta renomeada para name: http.
+
+Alinhamento com o Deployment
+Mantidos selectors consistentes com os labels aplicados no Deployment da API.
+
+Documentação do Endpoint de Readiness
+Adicionada anotação health-check-endpoint: "/healthz/ready".
+
+Observação de Segurança – NetworkPolicy
+Indicado no YAML que uma NetworkPolicy deve ser criada.
+
+
+
+
 apiVersion: v1
 kind: Service
 metadata:
