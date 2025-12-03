@@ -1,0 +1,34 @@
+Correções aplicadas no service-frontend.yaml:
+
+- Definido `namespace: fastscheduler` para padronização e organização do ambiente.
+- Adicionadas labels padronizadas (`app.kubernetes.io/*`) para facilitar integrações e observabilidade.
+- Nome da porta definido como `name: http`, garantindo compatibilidade com Ingress e ServiceMonitor.
+- Incluída anotação documentando o endpoint de saúde utilizado pelo frontend (`/`).
+- Mantido o selector alinhado ao Deployment (`app: fastscheduler`, `component: frontend`).
+- Adicionado aviso para criação de NetworkPolicy, reforçando segurança e controle de acesso.
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: fastscheduler
+  labels:
+    app: fastscheduler
+    component: frontend
+    app.kubernetes.io/name: fastscheduler
+    app.kubernetes.io/component: frontend
+  annotations:
+    health-check-endpoint: "/"   
+    service-purpose: "public-frontend-entrypoint"
+spec:
+  type: NodePort   
+  selector:
+    app: fastscheduler
+    component: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+      protocol: TCP
