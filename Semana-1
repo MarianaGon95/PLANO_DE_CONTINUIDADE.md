@@ -1,0 +1,86 @@
+##  Correções Aplicadas na API (Semana 1 – Alta Disponibilidade)
+
+As seguintes melhorias foram implementadas no `deployment-api.yaml` para aumentar a resiliência e eliminar pontos de falha:
+
+- Replicas aumentadas para 3, garantindo continuidade do serviço mesmo se um pod ou nó falhar.  
+- Adição de readinessProbe e livenessProbe**, permitindo que o Kubernetes identifique pods não saudáveis e faça recuperação automática.  
+- Credenciais removidas do YAML** e agora carregadas por meio de **Secret**, evitando exposição de informações sensíveis.  
+- Definição de requests e limits** de CPU e memória, prevenindo consumo excessivo e melhorando a estabilidade do cluster.
+
+Essas mudanças tornam a API mais segura, estável e preparada para operar em ambientes com falhas e manutenções programadas.
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastscheduler-api
+  labels:
+    app: fastscheduler
+    component: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fastscheduler
+      component: api
+  template:
+    metadata:
+      labels:
+        app: fastscheduler
+        component: api
+    spec:
+      containers:
+      - name: api
+        image: fastscheduler-api:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DB_HOST
+          value: "postgres"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "scheduler"
+
+        #credenciais via Secret
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: fastscheduler-db-secret
+              key: DB_USER
+
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: fastscheduler-db-secret
+              key: DB_PASSWORD
+
+        #Readiness Probe
+        readinessProbe:
+          httpGet:
+            path: /healthz/ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        #Livenes
+        livenessProbe:
+          httpGet:
+            path: /healthz/live
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        #Recursos
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
