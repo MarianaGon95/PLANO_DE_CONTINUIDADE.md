@@ -1,0 +1,22 @@
+## Análise - Semana 2: Escalabilidade
+
+### 1. Ausência de Definição de Recursos
+A aplicação não define quanto de CPU e memória cada pod precisa.
+
+**Risco:** O Kubernetes não consegue tomar decisões inteligentes de scheduling 
+e escalabilidade. O HPA (Horizontal Pod Autoscaler) não funciona sem essa informação.
+
+### 2. Sem Escalabilidade Automática
+Não há nenhum mecanismo configurado para escalar a aplicação automaticamente.
+
+**Risco:** Durante um pico de tráfego, a aplicação pode ficar sobrecarregada 
+e começar a responder lentamente ou até cair, mesmo tendo recursos disponíveis no cluster.
+
+### 3. Falta de Testes de Carga
+Não sabemos como a aplicação se comporta sob pressão.
+
+**Risco:** Podemos descobrir problemas de performance apenas quando a campanha 
+viral já estiver no ar, quando for tarde demais.
+
+
+  
