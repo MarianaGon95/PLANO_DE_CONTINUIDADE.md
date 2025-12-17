@@ -18,5 +18,26 @@ Não sabemos como a aplicação se comporta sob pressão.
 **Risco:** Podemos descobrir problemas de performance apenas quando a campanha 
 viral já estiver no ar, quando for tarde demais.
 
+##Manifesto HPA
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fastscheduler-api-hpa
+  namespace: fastscheduler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fastscheduler-api
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
 
   
